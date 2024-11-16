@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Ítems de Juego</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Forja de Artefactos Épicos</h1>
+        <form id="itemForgeForm" class="border p-4 rounded shadow-sm">
+            <div class="mb-3">
+                <label for="gameName" class="form-label">Nombre del Juego:</label>
+                <input type="text" id="gameName" class="form-control" placeholder="Ejemplo: Hyrule" required>
+            </div>
+            <div class="mb-3">
+                <label for="heroName" class="form-label">Nombre del Héroe:</label>
+                <input type="text" id="heroName" class="form-control" placeholder="Tu héroe legendario" required>
+            </div>
+            <div class="mb-3">
+                <label for="magicRune" class="form-label">Runa Mágica (máximo 2 símbolos):</label>
+                <input type="text" id="magicRune" class="form-control" placeholder="Ejemplo: ☯︎" maxlength="2" required>
+            </div>
+            <button type="button" class="btn btn-primary w-100 mt-4" onclick="forgeArtifact()">Forjar Artefacto</button>
+        </form>
+
+        <h2 class="text-center mt-4">Artefacto Forjado</h2>
+        <p id="artifactResult" class="text-center text-success fw-bold mt-3"></p>
+    </div>
+
+    <script>
+        // Generar el hash SHA-256 de un texto
+        function generateSHA256(input) {
+            return CryptoJS.SHA256(input).toString();
+        }
+
+        // Función para seleccionar símbolos especiales
+        function getSpecialSymbols(hash, count) {
+            const symbols = "!@#$%^&*()_+[]{}|;:,.<>?";
+            let result = '';
+            for (let i = 0; i < count; i++) {
+                const symbolIndex = parseInt(hash.slice(i * 2, i * 2 + 2), 16) % symbols.length;
+                result += symbols[symbolIndex];
+            }
+            return result;
+        }
+
+        // Función para seleccionar letras mayúsculas
+        function getUppercaseLetters(hash, count) {
+            let result = '';
+            for (let i = 0; i < count; i++) {
+                const charCode = 65 + (parseInt(hash.slice(i * 2 + 20, i * 2 + 22), 16) % 26); // A-Z
+                result += String.fromCharCode(charCode);
+            }
+            return result;
+        }
+
+        // Forjar el artefacto
+        function forgeArtifact() {
+            const gameName = document.getElementById('gameName').value.trim();
+            const heroName = document.getElementById('heroName').value.trim();
+            const magicRune = document.getElementById('magicRune').value.trim();
+
+            // Validar entradas
+            if (!gameName || !heroName || !magicRune) {
+                alert('Por favor, completa todos los campos.');
+                return;
+            }
+
+            // Asegurarse de que `magicRune` tiene un máximo de 2 caracteres
+            if (magicRune.length > 2) {
+                alert('La runa mágica debe tener un máximo de 2 símbolos.');
+                return;
+            }
+
+            // Concatenar inputs
+            const combinedInput = gameName + ':' + heroName + ':' + magicRune;
+
+            // Generar hash SHA-256
+            const fullHash = generateSHA256(combinedInput);
+
+            // Partes del artefacto
+            const baseHex = fullHash.slice(0, 8); // Primeros 8 caracteres del hash
+            const specialSymbols = getSpecialSymbols(fullHash, 2); // 2 símbolos especiales
+            const uppercaseLetters = getUppercaseLetters(fullHash, 2); // 2 letras mayúsculas
+            const randomLower = String.fromCharCode(97 + parseInt(fullHash.slice(18, 20), 16) % 26); // Letra minúscula
+
+            // Unir partes y ajustar a longitud exacta de 14 caracteres
+            let finalArtifact = `${baseHex}${specialSymbols}${uppercaseLetters}${randomLower}`;
+            finalArtifact = finalArtifact.slice(0, 14); // Truncar si es más largo
+            while (finalArtifact.length < 14) {
+                finalArtifact += "x"; // Rellenar con "x" si es más corto
+            }
+
+            // Mostrar el artefacto forjado
+            document.getElementById('artifactResult').textContent = finalArtifact;
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
